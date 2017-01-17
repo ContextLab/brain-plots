@@ -1,13 +1,21 @@
-function[] = plot_brain3d(x,erode_layers)
+function[] = plot_brain3d(x,meta,erode_layers)
 %PLOT_BRAIN3D  Plot a 3d brain image
 %
 % Each voxel is plotted as a colored cube, such that the entire image forms
 % a 3d brain.
 %
-% Usage: plot_brain3d(x,erode_layers)
+% Usage: plot_brain3d(x,meta,erode_layers)
 %
 % INPUTS:
-%            x: a 3d matrix (tensor) of voxel activations
+%            x: a 1 by nvoxels vector of voxel activations
+%
+%         meta: a struct with the following fields:
+%            nvoxels: total number of voxels containing brain
+%         coordToCol: dimx by dimy by dimz matrix of voxel numbers (zeros
+%                     indicate no voxel at the corresponding location)
+%         colToCoord: nvoxels by 3 matrix of voxel locations
+%
+%     **TIP: meta can also be an nvoxels by 3 matrix of voxel locations**
 %      
 % erode_layers: optional argument specifying how many layers to make much
 %               more transparent.  this allows patterns beneath the surface
@@ -15,7 +23,7 @@ function[] = plot_brain3d(x,erode_layers)
 %
 % OUTPUTS: [none]
 %
-% SEE ALSO: PLOT_BRAIN2D, PLOT_BRAIN3D, PATCH_3DARRAY, IMERODE
+% SEE ALSO: PLOT_BRAIN2D, PLOT_BRAIN3D_ALT, PATCH_3DARRAY, IMERODE
 %
 %  AUTHOR: Jeremy R. Manning
 % CONTACT: manning3@princeton.edu
@@ -23,45 +31,13 @@ function[] = plot_brain3d(x,erode_layers)
 % CHANGELOG:
 % 4-11-12  jrm  wrote it.
 % 2-22-13  jrm  ensure voxels appear as cubes.
-% 12-11-13 jrm  renamed to plot_brain3d
+% 12-11-13 jrm  re-wrote as wrapper to plot_brain3d
+% 12-12-13 jrm  clarified necessary fields in meta struct
 
-if ~exist('erode_layers','var')
+if ~exist('erode_layers', 'var')
     erode_layers = 0;
 end
 
-se = strel('arbitrary',ones([3 3 3]));
-mask = ~isnan(x);
-for i = 1:erode_layers
-    mask = imerode(mask,se);
-end
+img = cmu_to_mat(x, meta);
+plot_brain3d(img, erode_layers);
 
-outer = x;
-outer(mask) = nan;
-inner = x;
-inner(~mask) = nan;
-
-hold on;
-h1 = PATCH_3Darray(inner,'col');
-if iscell(h1)
-    for i = 1:length(h1)
-        set(h1{i},'FaceAlpha',0.25);%,'EdgeColor','none');
-    end
-else
-    set(h1,'FaceAlpha',0.25);
-end
-
-if erode_layers > 0
-    h2 = PATCH_3Darray(outer,'col');
-    if iscell(h2)
-        for i = 1:length(h2)
-            set(h2{i},'FaceAlpha',0.1,'EdgeColor','none');
-        end
-    else
-        set(h2,'FaceAlpha',0.1,'EdgeColor','none');
-    end
-end
-
-axis square;
-axis off;
-
-set(gca,'CameraPosition',[-239.1516 -192.6841 256.3707]);

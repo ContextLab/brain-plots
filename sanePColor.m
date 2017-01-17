@@ -54,7 +54,7 @@ function p = sanePColor(varargin)
 % SEE ALSO: PCOLOR, IMAGE, IMAGESC, SEMILOGX, SEMILOGY, LOGLOG, PADARRAY
 %
 %   AUTHOR: JEREMY R. MANNING
-%  CONTACT: manning3@princeton.edu
+%  CONTACT: jeremy@dartmouth.edu
 
 
 %CHANGELOG
@@ -62,6 +62,8 @@ function p = sanePColor(varargin)
 %3-12-12    JRM      Support a more diverse range of input configurations.
 %9-21-12    JRM      Use linear and logistic interpolation to estimate data
 %                    coordinates more accurately.
+%10-6-16    JRM      Support non-linear and non-log axes (Credit: Benjamin
+%                    Strom suggestion via Mathworks FileExchange)
 
 %parse arguments
 if length(varargin) == 1 %just z
@@ -143,12 +145,10 @@ shading flat;
 
 
 function[ey] = linexpand(y)
-x = 1:length(y);
-p = polyfit(1:length(y),y,1);
-
-ex = union(x - 0.5, x + 0.5);
-ex = prune(ex,length(ex) - (length(x) + 1));
-ey = polyval(p,ex);
+%Credit: Benjamin Strom
+ey = [y, 0]; 
+ey(end) = 2*ey(end-1) - ey(end-2); 
+ey = ey - (ey(end-1) - ey(end-2))/2;
 
 function[ex] = logexpand(x)
 ex = exp(linexpand(log(x)));
